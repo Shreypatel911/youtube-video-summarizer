@@ -1,0 +1,21 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environment variables and secrets
+.env
+
+# Audio files (you can keep output if needed)
+*.mp3
+*.wav
+audio/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
