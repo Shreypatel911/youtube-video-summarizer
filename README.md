@@ -50,7 +50,7 @@ pydub
 tiktoken
 gradio
 
-To launch the app run the below command
+To launch the app run the command - 
 python ui.py
 
 Then open the generated Gradio UI in your browser. Paste a YouTube video URL and type prompts like:
