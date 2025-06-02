@@ -34,7 +34,7 @@ def handle_message(user_input):
             chat_history.append(
                 (user_input, "🧠 Quiz started. Please answer the questions below.")
             )
-            return render_chat(), q["question"], gr.update(choices=options), gr.update(visible=True), "", "", gr.update(visible=False), ""
+            return render_chat(), q["question"], gr.update(choices=options), gr.update(visible=True), "", None, gr.update(visible=False), ""
 
         if "video_path" in response and "audio_path" in response:
             chat_history.append(
