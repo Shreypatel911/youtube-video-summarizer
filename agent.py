@@ -5,15 +5,12 @@ from tools.quiz import generate_quiz
 from intent_classifier import classify_intent
 import re
 
-# 🔁 Memory across user prompts
-memory = {
-    "video_id": None,
-    "transcript": None,
-    "last_summary": None,
-    "last_quiz": None
-}
-
 video_cache = {}
+session_state = {
+    "current_video_id": None,
+    "transcript": None,
+    "last_quiz_id": None
+}
 
 
 def extract_video_id(url: str) -> str:
@@ -36,53 +33,38 @@ def handle_user_input(user_input: str):
     actions = classify_intent(user_input)
 
     if not actions:
-        return "I can summarize YouTube videos or create quizzes from them. Please clarify what you'd like me to do."
+        return "I'm not sure what you'd like me to do. I can summarize videos or create quizzes from them."
 
     url = extract_youtube_url(user_input)
     video_id = extract_video_id(url) if url else None
 
     if video_id:
-        if video_id in video_cache:
-            print(f"🔁 Using cached transcript for video: {video_id}")
-            transcript = video_cache[video_id]["transcript"]
-        else:
-            print(f"⬇️ Downloading and transcribing new video: {video_id}")
+        if video_id != session_state["current_video_id"]:
             audio = download_audio(url)
             transcript = transcribe_audio(audio)
             video_cache[video_id] = {"audio": audio, "transcript": transcript}
+            session_state["current_video_id"] = video_id
+            session_state["transcript"] = transcript
+        else:
+            transcript = video_cache[video_id]["transcript"]
+    elif not session_state["transcript"]:
+        return "Please provide a YouTube video URL to begin."
 
-        # Store in memory
-        memory["video_id"] = video_id
-        memory["transcript"] = transcript
-
-    elif memory["transcript"]:
-        print(
-            f"🧠 Using remembered transcript from video: {memory['video_id']}")
-        transcript = memory["transcript"]
-    else:
-        return "Please provide a YouTube video link to begin."
-
-    response_parts = []
-
-    if "summarize" in actions:
-        summary = summarize_text(transcript)
-        memory["last_summary"] = summary
-        response_parts.append("🔹 Summary:\n" + summary)
+    transcript = session_state["transcript"]
 
     if "quiz" in actions:
         num_qs = extract_num_questions(user_input)
-        quiz = generate_quiz(transcript, num_questions=num_qs)
-        memory["last_quiz"] = quiz
-        response_parts.append("🧠 Quiz:\n" + quiz)
+        quiz_id, quiz_questions = generate_quiz(
+            transcript, num_questions=num_qs)
+        session_state["last_quiz_id"] = quiz_id
+        return {
+            "text": f"🧠 Quiz with {len(quiz_questions)} questions:",
+            "quiz_id": quiz_id,
+            "quiz_questions": quiz_questions
+        }
 
-    return "\n\n".join(response_parts) if response_parts else "I understood your intent but have no action to perform."
+    if "summarize" in actions:
+        summary = summarize_text(transcript)
+        return f"🔹 Summary:\n{summary}"
 
-
-if __name__ == "__main__":
-    print("💬 YouTube Agent Ready. Type 'exit' to quit.")
-    while True:
-        user_prompt = input("You: ")
-        if user_prompt.lower() in {"exit", "quit"}:
-            break
-        response = handle_user_input(user_prompt)
-        print("\nAgent:\n" + response + "\n")
+    return "I understood the intent, but nothing to do."

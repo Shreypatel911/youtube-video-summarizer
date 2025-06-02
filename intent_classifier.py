@@ -7,7 +7,7 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 def classify_intent(user_prompt: str) -> list[str]:
     system_message = (
         "You are an intent classifier. Based on user input, return a Python list containing any of these strings: "
-        "'summarize', 'quiz'. If none apply, return an empty list []."
+        "'summarize', 'quiz', 'translate'. If none apply, return an empty list []."
     )
 
     response = client.chat.completions.create(
